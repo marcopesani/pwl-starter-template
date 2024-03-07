@@ -54,6 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const cta1 = document.getElementById("cta-1");
     const cta2 = document.getElementById("cta-2");
     const body = document.getElementById("body");
+    const hero = document.getElementById("hero");
 
     subject.textContent = content.subject;
     title.textContent = content.title;
@@ -61,6 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
     cta1.textContent = content.cta;
     cta2.textContent = content.cta;
     body.textContent = content.body;
+    hero.src = content.imageUrl;
   }
 
   function handleFormChange() {
@@ -85,6 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
     })
       .then((response) => response.json())
       .then((data) => {
+        console.log("Form submission response:", data);
         content = data;
         stopLoading();
       })
