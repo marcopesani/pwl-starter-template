@@ -1,38 +1,38 @@
-# PWL Starter Template
+# Template di Partenza Puglia Women Lead AI Hackaton
 
-This project serves as a starter template for the Puglia Women Lead AI hackathon. It's designed to get you up and running with a basic server setup using Express.
+Questo progetto funge da template di partenza per l'hackathon Puglia Women Lead AI. È progettato per aiutarti a iniziare con una configurazione server di base utilizzando Express.
 
-## Features
+## Caratteristiche
 
-- **Express Server**: Utilizes Express for the backend server, providing a robust set of features for web and mobile applications.
-- **Nodemon**: Integrated with Nodemon for automatic server restarts upon file changes, enhancing the development experience.
+- **Server Express**: Utilizza Express per il server backend, fornendo un robusto insieme di funzionalità per applicazioni web e mobili.
+- **Nodemon**: Integrato con Nodemon per riavvii automatici del server al cambio dei file, migliorando l'esperienza di sviluppo.
 
-## Getting Started
+## Per Iniziare
 
-To get started with this project, follow these steps:
+Per iniziare con questo progetto, segui questi passi:
 
-1. Clone the repository: `git clone https://github.com/marcopesani/pwl-starter-template.git`
-2. Navigate to the project directory: `cd pwl-starter-template`
-3. Install dependencies: `npm install`
-4. Start the development server: `npm run dev`
+1. Clona il repository: `git clone https://github.com/marcopesani/pwl-starter-template.git`
+2. Naviga nella directory del progetto: `cd pwl-starter-template`
+3. Installa le dipendenze: `npm install`
+4. Avvia il server di sviluppo: `npm run dev`
 
-This will start the server with Nodemon, which will watch for any file changes in the `server` and `public` directories and restart the server automatically.
+Questo avvierà il server con Nodemon, che osserverà qualsiasi cambio di file nelle directory `server` e `public` e riavvierà automaticamente il server.
 
-## Scripts
+## Script
 
-- `npm start`: Runs the server in production mode.
-- `npm run dev`: Runs the server in development mode with Nodemon.
+- `npm start`: Esegue il server in modalità produzione.
+- `npm run dev`: Esegue il server in modalità sviluppo con Nodemon.
 
-## Contributing
+## Contribuire
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you have any suggestions or find any bugs.
+I contributi sono benvenuti! Sentiti libero di inviare una pull request o aprire un problema se hai suggerimenti o trovi dei bug.
 
-## License
+## Licenza
 
-This project is licensed under the Apache-2.0 License - see the [LICENSE](LICENSE) file for details.
+Questo progetto è concesso in licenza sotto la Licenza Apache-2.0 - vedi il file [LICENSE](LICENSE) per i dettagli.
 
-## Acknowledgments
+## Ringraziamenti
 
-This project is part of the Puglia Women Lead AI hackathon initiative, aimed at promoting women's participation in technology and AI.
+Questo progetto fa parte dell'iniziativa hackathon Puglia Women Lead AI, volta a promuovere la partecipazione delle donne nella tecnologia e nell'IA.
 
-Learn more about Puglia Women Lead on the [official website](https://pugliawomenlead.com/) and the Puglia Women AI event on the [dedicated page](https://pugliawomenlead.com/prodotto/puglia-women-ai/).
+Scopri di più su Puglia Women Lead sul [sito ufficiale](https://pugliawomenlead.com/) e sull'evento Puglia Women AI sulla [pagina dedicata](https://pugliawomenlead.com/prodotto/puglia-women-ai/).

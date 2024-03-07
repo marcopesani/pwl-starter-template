@@ -5,10 +5,10 @@ const multer = require("multer");
 const upload = multer();
 const { generateEmailContent, generateHeroImage } = require("./openai");
 
-// Serve the form page
+// Rende accessibili i file statici dalla directory 'public'
 router.use(express.static(path.join(__dirname, "public")));
 
-// Handle form submission
+// Gestisce l'invio del form, avviando le funzioni per generare il contenuto dell'email e l'immagine
 router.post("/create", upload.single("heroImage"), async (req, res) => {
   try {
     const formData = req.body;

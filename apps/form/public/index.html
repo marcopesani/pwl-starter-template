@@ -62,7 +62,7 @@
 
       <!-- L'anteprima del contenuto -->
       <div class="w-2/3 bg-gray-100 p-8 overflow-y-auto">
-        <!-- Spinner di caricamento -->
+        <!-- Icona di caricamento -->
         <div
           class="hidden loading-visible flex justify-center items-center h-full"
         >
@@ -105,10 +105,20 @@
         </div>
 
         <!-- Stato di errore -->
-        <div id="errorState" class="hidden loading-hidden">
-          <div class="flex items-center justify-center h-full">
-            <p class="text-red-500">Errore di caricamento</p>
-          </div>
+        <div
+          id="errorState"
+          class="loading-hidden flex flex-col items-center justify-center h-full"
+        >
+          <i
+            data-feather="alert-triangle"
+            class="text-rose-400 mb-2"
+            stroke-width="2"
+            width="30"
+            height="30"
+          ></i>
+          <p id="error" class="text-rose-500 text-xl w-80 text-center">
+            Errore di generazione.
+          </p>
         </div>
 
         <!-- Contenuto -->
