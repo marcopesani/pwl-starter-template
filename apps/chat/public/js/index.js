@@ -1,5 +1,6 @@
 let messages = [],
   currentMessage = -1;
+const session = `${Date.now()}-${Math.random()}`;
 
 document.addEventListener("DOMContentLoaded", function () {
   const messagesContainer = document.getElementById("messagesContainer");
@@ -7,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const inputForm = document.getElementById("inputForm");
   const baseMessage = document.getElementById("baseMessage").cloneNode(true);
 
-  const renderMessages = () => {
+  function renderMessages() {
     messagesContainer.innerHTML = "";
 
     messages.forEach((message) => {
@@ -22,6 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
       clone.classList.remove("hidden");
       messagesContainer.appendChild(clone);
     });
+
+    // Scroll messagesOverflow to bottom after rendering messages
+    messagesOverflow.scrollTop = messagesOverflow.scrollHeight;
   };
 
   const startStream = async (prompt) => {
@@ -29,11 +33,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const response = await fetch("/chat/message", {
       method: "POST",
       headers: {
-        "Content-Type": "text/event-stream",
+        "Content-Type": "application/json",
       },
-      body: {
+      body: JSON.stringify({
         prompt,
-      },
+        session,
+      }),
     });
     const reader = response.body
       .pipeThrough(new TextDecoderStream())
@@ -70,6 +75,13 @@ document.addEventListener("DOMContentLoaded", function () {
     e.target.reset();
   };
 
+  const handleFormChange = (e) => {
+    const textarea = e.target;
+    const lines = textarea.value.split("\n").length;
+    textarea.rows = lines;
+  };
+
   inputForm.addEventListener("submit", handleFormSubmit);
+  inputForm.addEventListener("input", handleFormChange);
   feather.replace();
 });
