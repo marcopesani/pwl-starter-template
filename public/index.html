@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>OpenAI Inspired Page</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.1/feather.min.js"
+      integrity="sha512-4lykFR6C2W55I60sYddEGjieC2fU79R7GUtaqr3DzmNbo0vSaO1MfUjMoTFYYuedjfEix6uV9jVTtRCSBU/Xiw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body class="bg-slate-100 flex justify-center items-center min-h-screen">
+    <main class="container mx-auto max-w-xl">
+      <header class="flex flex-col gap-2 justify-center items-center mb-10">
+        <img
+          src="/images/cropped-PugliaWomenLead_LOGO-BALCK.png"
+          width="60"
+          height="60"
+        />
+        <h1 class="text-2xl font-semibold">Puglia Women AI</h1>
+      </header>
+      <section class="gap-8 columns-2 mx-auto">
+        <a
+          class="block p-6 bg-slate-200 hover:bg-slate-300 rounded flex flex-col"
+          href="/chat"
+        >
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="text-xl font-semibold">Chat</h2>
+            <i data-feather="arrow-right"></i>
+          </div>
+          <p>Chatta con il tuo assistente personalizzato.</p>
+        </a>
+        <a
+          class="block p-6 bg-slate-200 hover:bg-slate-300 rounded flex flex-col"
+          href="/chat"
+        >
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-xl font-semibold">Form</h2>
+          <i data-feather="arrow-right"></i>
+        </div>
+          <p>Genera contenuti basati su una struttura dati definita.</p>
+        </a>
+      </section>
+    </main>
+    <script>
+      feather.replace();
+    </script>
+  </body>
+</html>
