@@ -37,3 +37,21 @@
   max-width: 100%;
   height: auto;
 }
+
+.markdown pre {
+  margin-top: 0.75rem; /* Tailwind mt-3 */
+  margin-bottom: 0.75rem; /* Tailwind mb-3 */
+  padding: 1rem; /* Tailwind p-4 */
+  background-color: #f3f4f6; /* Tailwind bg-gray-100 */
+  border-radius: 0.5rem; /* Tailwind rounded-md */
+  overflow-x: auto; /* Tailwind overflow-auto */
+  font-size: 0.875rem; /* Tailwind text-sm */
+}
+
+.markdown code {
+  color: #000000; /* Tailwind text-yellow-600 */
+  font-size: 0.875rem; /* Tailwind text-sm */
+  background-color: #f3f4f6; /* Tailwind bg-gray-100 */
+  padding: 0.25rem; /* Tailwind px-1 */
+  border-radius: 0.25rem; /* Tailwind rounded-sm */
+}

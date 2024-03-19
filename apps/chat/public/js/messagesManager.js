@@ -6,11 +6,12 @@ class MessagesManager {
    * Costruttore della classe MessagesManager.
    */
   constructor() {
-    this.messageTemplate = document.getElementById("baseMessage").cloneNode(true);
+    this.messageTemplate = document.getElementById("baseMessage");
     this.messagesContainer = document.getElementById("messagesContainer");
     this.messagesOverflow = document.getElementById("messagesOverflow");
     this.userScrolled = false;
     this.isFirstMessage = true;
+    this.lastUpdate = 0;
     this.initializeScrollListener();
   }
 
@@ -19,10 +20,8 @@ class MessagesManager {
    */
   initializeScrollListener() {
     this.messagesOverflow.addEventListener("scroll", () => {
-      const maxScrollTop = this.messagesOverflow.scrollHeight - this.messagesOverflow.clientHeight;
-      if (this.messagesOverflow.scrollTop < maxScrollTop - 10) {
-        this.userScrolled = true;
-      }
+      const { scrollTop, scrollHeight, clientHeight } = this.messagesOverflow;
+      this.userScrolled = scrollTop < scrollHeight - clientHeight - 10;
     });
   }
 
@@ -36,14 +35,21 @@ class MessagesManager {
       this.messagesContainer.innerHTML = "";
       this.isFirstMessage = false;
     }
+
     const newMessage = this.messageTemplate.cloneNode(true);
-    newMessage.querySelector(".messageContent").textContent = message;
-    newMessage.querySelector(".messageRole").textContent = role;
+    const messageContent = newMessage.querySelector(".messageContent");
+    const messageRole = newMessage.querySelector(".messageRole");
+
+    messageContent.textContent = message;
+    messageRole.textContent = role;
     newMessage.style.display = "flex";
+
     this.messagesContainer.appendChild(newMessage);
+
     if (!this.userScrolled) {
       this.scrollToBottom();
     }
+
     this.userScrolled = false;
   }
 
@@ -61,9 +67,7 @@ class MessagesManager {
   updateCurrentMessage(content) {
     if (!this.lastUpdate || performance.now() - this.lastUpdate > 25) {
       this.lastUpdate = performance.now();
-      requestAnimationFrame(() => {
-        this.performUpdate(content);
-      });
+      requestAnimationFrame(() => this.performUpdate(content));
     }
   }
 
@@ -72,17 +76,15 @@ class MessagesManager {
    * @param {string} content - Il contenuto del messaggio.
    */
   performUpdate(content) {
-    const lastMessage = this.messagesContainer.lastChild;
+    const lastMessage = this.messagesContainer.lastElementChild;
     if (!lastMessage) return;
 
     const messageContent = lastMessage.querySelector(".messageContent");
     if (!messageContent) return;
 
-    // Sanitizza e analizza il contenuto una sola volta.
     const sanitizedContent = DOMPurify.sanitize(content);
     const parsedContent = marked.parse(sanitizedContent);
 
-    // Confronta e aggiorna solo se c'è una differenza.
     if (messageContent.innerHTML !== parsedContent) {
       messageContent.innerHTML = parsedContent;
       if (!this.userScrolled) {

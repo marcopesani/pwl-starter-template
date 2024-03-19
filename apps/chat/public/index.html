@@ -94,12 +94,18 @@
     <script src="/chat/js/inputManager.js"></script>
     <script src="/chat/js/chatApp.js"></script>
     <script>
-      window.__data = JSON.parse(`%%DATA_OBJECT%%`);
+      const string = "%%DATA_OBJECT%%";
+      const sanitized = string
+        .replace(/\\?"/g, function (match) {
+          return match === '"' ? match : '\\"';
+        })
+        .replace(/\\?\\(?!\")/g, "\\\\")
+        .replace(/\n/g, "\\n")
+        .replace(/\r/g, "\\r")
+        .replace(/\t/g, "\\t");
+      const object = JSON.parse(DOMPurify.sanitize(sanitized));
       document.addEventListener("DOMContentLoaded", function () {
-        const chatApp = new ChatApp(
-          window.__data.assistant,
-          window.__data.thread
-        );
+        const chatApp = new ChatApp(object.assistant, object.thread);
         console.log("Chat app initialized!", chatApp);
       });
     </script>
