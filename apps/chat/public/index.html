@@ -5,7 +5,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.1/feather.min.js"
+      integrity="sha512-4lykFR6C2W55I60sYddEGjieC2fU79R7GUtaqr3DzmNbo0vSaO1MfUjMoTFYYuedjfEix6uV9jVTtRCSBU/Xiw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js"
+      integrity="sha512-1GgSiv9SKCKM58EvRcsfktHVaUxaAB35K0Mbj6mpLZ4DLbHPq+4YM55iPktDR6RnDm47hUAPmB/z0xUuvtD+xg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"
+      integrity="sha512-pSeTnZAQF/RHxb0ysMoYQI/BRZsa5XuklcrgFfU3YZIdnD3LvkkqzrIeHxzFi6gKtI8Cpq2DEWdZjMTcNVhUYA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <link href="/chat/css/styles.css" rel="stylesheet" />
   </head>
   <body class="min-h-screen flex flex-col">
     <div id="messages" class="relative flex-1">
@@ -20,9 +38,9 @@
               id="emptyState"
               class="flex flex-col items-center justify-center h-64"
             >
-              <h2 class="text-2xl font-bold mt-4">No messages yet</h2>
+              <h2 class="text-2xl font-bold mt-4">%%ASSISTANT_NAME%%</h2>
               <p class="text-slate-500 text-center mt-2 w-80 text-center">
-                Start the conversation by typing a message.
+                Scrivi un messaggio per iniziare la conversazione
               </p>
             </div>
             <!-- User message -->
@@ -35,8 +53,8 @@
                 class="messageImage w-7 h-7 rounded mr-3"
               />
               <div>
-                <h5 class="messageRole font-bold mb-1">Role</h5>
-                <div class="messageContent">Message</div>
+                <h5 class="messageRole font-bold mb-1">Ruolo</h5>
+                <div class="messageContent markdown">Messaggo</div>
               </div>
             </div>
           </section>
@@ -52,11 +70,12 @@
               name="message"
               rows="1"
               class="flex-1 border-0 p-0 focus:outline-none self-center resize-none"
-              placeholder="Type a message..."
+              placeholder="Scrivi un messaggio..."
             ></textarea>
             <button
               type="submit"
-              class="ml-2 bg-slate-800 text-white rounded-lg p-2 self-start"
+              class="ml-2 bg-slate-800 text-white rounded-lg p-2 self-start disabled:bg-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled
             >
               <i
                 data-feather="arrow-up"
@@ -64,15 +83,25 @@
                 width="22"
                 height="22"
               ></i>
-              <span class="sr-only">Send</span>
+              <span class="sr-only">Invia</span>
             </button>
           </div>
         </form>
       </div>
     </div>
+    <script src="/chat/js/chatManager.js"></script>
+    <script src="/chat/js/messagesManager.js"></script>
+    <script src="/chat/js/inputManager.js"></script>
+    <script src="/chat/js/chatApp.js"></script>
     <script>
       window.__data = JSON.parse(`%%DATA_OBJECT%%`);
+      document.addEventListener("DOMContentLoaded", function () {
+        const chatApp = new ChatApp(
+          window.__data.assistant,
+          window.__data.thread
+        );
+        console.log("Chat app initialized!", chatApp);
+      });
     </script>
-    <script src="/chat/js/index.js"></script>
   </body>
 </html>
