@@ -1,18 +1,40 @@
 const express = require("express");
-const router = express.Router();
 const path = require("path");
-const OpenAI = require("openai");
-const { OPENAI_API_KEY } = require("../../server/config");
+const { OpenAI } = require("openai");
+const { OPENAI_API_KEY, OPENAI_ASSISTANT_ID } = require("../../server/config");
+const fs = require("fs");
 
-const memory = {};
-
-// Crea un'istanza di OpenAI utilizzando la chiave API
+const router = express.Router();
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
-// Rende accessibili i file statici dalla directory 'public'
-router.use(express.static(path.join(__dirname, "public")));
+// Store abort controllers in a map with thread_id as key
+const abortControllers = new Map();
+
+router.use((req, res, next) => {
+  if (req.path === "/" || req.path === "/index.html") {
+    const index = path.join(__dirname, "public", "index.html");
+    fs.readFile(index, "utf8", async (err, data) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error reading index file.");
+      }
+      const assistant = await openai.beta.assistants.retrieve(
+        OPENAI_ASSISTANT_ID
+      );
+
+      const thread = await openai.beta.threads.create();
+      const result = data.replace(
+        /%%DATA_OBJECT%%/g,
+        JSON.stringify({ assistant, thread }).replace(/"/g, '\\"') || "{}"
+      );
+      res.send(result);
+    });
+  } else {
+    express.static(path.join(__dirname, "public"))(req, res, next);
+  }
+});
 
 router.post("/message", async (req, res) => {
   try {
@@ -20,45 +42,73 @@ router.post("/message", async (req, res) => {
       throw new Error("prompt_missing");
     }
 
-    if (!req.body.session) {
-      throw new Error("session_missing");
+    if (!req.body.thread_id) {
+      throw new Error("thread_id_missing");
     }
 
-    // Inizializza la memoria per la sessione
-    if (!memory[req.body.session]) {
-      memory[req.body.session] = [];
-    }
-
-    // Aggiunge il messaggio dell'utente alla memoria
-    memory[req.body.session].push({ role: "user", content: req.body.prompt });
-
-    const stream = openai.beta.chat.completions.stream({
-      model: "gpt-3.5-turbo-0125",
-      stream: true,
-      messages: memory[req.body.session],
+    await openai.beta.threads.messages.create(req.body.thread_id, {
+      role: "user",
+      content: req.body.prompt,
     });
 
     res.header("Content-Type", "text/plain");
-    let answer = "";
 
-    for await (const chunk of stream.toReadableStream()) {
-      res.write(chunk);
-      let chunkJson = JSON.parse(new TextDecoder().decode(chunk));
-      if (chunkJson.choices[0].finish_reason !== "stop") {
-        answer += chunkJson.choices[0].delta.content || "";
-      }
-    }
-    
-    // Aggiunge il messaggio dell'assistente alla memoria
-    memory[req.body.session].push({
-      role: "assistant",
-      content: answer
-    });
+    const abortController = new AbortController();
+    abortControllers.set(req.body.thread_id, abortController);
 
-    // Restituisce la risposta
-    res.end();
+    const run = openai.beta.threads.runs
+      .createAndStream(
+        req.body.thread_id,
+        {
+          assistant_id: OPENAI_ASSISTANT_ID,
+        },
+        { signal: abortController.signal }
+      )
+      .on("textDelta", (textDelta, snapshot) => {
+        console.log("Text delta:", { textDelta, snapshot });
+        res.write(snapshot.value);
+      })
+      .on("textDone", (textDelta, snapshot) => {
+        console.log("Text done:", { textDelta, snapshot });
+        abortControllers.delete(req.body.thread_id);
+        res.end();
+      })
+      .on("error", (error) => {
+        if (error.name === "AbortError") {
+          console.log("Stream aborted by the user or programmatically.");
+          res.json({ message: "Operation was cancelled successfully." });
+        } else {
+          console.error("Stream error:", error);
+          res.status(500).send("An error occurred.");
+        }
+        abortControllers.delete(req.body.thread_id);
+        res.end();
+      });
   } catch (e) {
     console.error(e);
+    res.status(500).send("An error occurred.");
+  }
+});
+
+router.post("/stop", async (req, res) => {
+  try {
+    if (!req.body.thread_id) {
+      throw new Error("thread_id_missing");
+    }
+
+    const abortController = abortControllers.get(req.body.thread_id);
+    if (abortController) {
+      abortController.abort();
+      abortControllers.delete(req.body.thread_id);
+      res.json({ message: "Stream aborted successfully" });
+    } else {
+      // If no abortController is found, it means there's nothing to abort.
+      // You can decide to either send a different message or handle it as you see fit.
+      res.status(404).send("Stream not found or already ended.");
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Failed to abort the stream.");
   }
 });
 

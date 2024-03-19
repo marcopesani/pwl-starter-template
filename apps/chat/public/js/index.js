@@ -1,6 +1,6 @@
 let messages = [],
   currentMessage = -1;
-const session = `${Date.now()}-${Math.random()}`;
+let isStreaming = false;
 
 document.addEventListener("DOMContentLoaded", function () {
   const messagesContainer = document.getElementById("messagesContainer");
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
       clone.id = message.id;
       clone.querySelector(".messageContent").textContent = message.message;
       clone.querySelector(".messageRole").textContent =
-        message.role === "user" ? "You" : "Assistant";
+        message.role === "user" ? "You" : window.__data.assistant.name;
       clone.querySelector(
         ".messageImage"
       ).src = `https://gravatar.com/avatar/${message.role}?s=100&d=retro&r=x`;
@@ -26,10 +26,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Scroll messagesOverflow to bottom after rendering messages
     messagesOverflow.scrollTop = messagesOverflow.scrollHeight;
-  };
+  }
 
-  const startStream = async (prompt) => {
-    let answer = "";
+  async function startStream(prompt) {
+    isStreaming = true;
     const response = await fetch("/chat/message", {
       method: "POST",
       headers: {
@@ -37,30 +37,47 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       body: JSON.stringify({
         prompt,
-        session,
+        thread_id: window.__data.thread.id,
       }),
     });
-    const reader = response.body
-      .pipeThrough(new TextDecoderStream())
-      .getReader();
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      const partial = value
-        .split("\n")
-        .filter((v) => v)
-        .map((v) => JSON.parse(v))
-        .reduce((acc, v) => {
-          return acc + (v.choices[0].delta.content || "");
-        }, "");
-      answer = answer + partial;
-      messages[currentMessage].message = answer;
-      renderMessages();
-    }
-  };
 
-  const handleFormSubmit = (e) => {
+    if (response.body) {
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader();
+      let done, value;
+      while (true) {
+        ({ done, value } = await reader.read());
+        if (done) {
+          isStreaming = false;
+          break;
+        }
+        messages[currentMessage].message = value;
+        renderMessages();
+      }
+    }
+  }
+
+  async function stopStream() {
+    if (isStreaming) {
+      await fetch("/chat/stop", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          thread_id: window.__data.thread.id,
+        }),
+      });
+      isStreaming = false;
+    }
+  }
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (isStreaming) {
+      await stopStream();
+    }
     const formData = new FormData(e.target);
     const message = formData.get("message");
     messages = [
@@ -81,6 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
     textarea.rows = lines;
   };
 
+  // Initialize UI
   inputForm.addEventListener("submit", handleFormSubmit);
   inputForm.addEventListener("input", handleFormChange);
   feather.replace();
