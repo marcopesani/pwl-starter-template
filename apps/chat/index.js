@@ -1,9 +1,11 @@
 const express = require("express");
 const path = require("path");
-const { OpenAI } = require("openai");
+const multer = require("multer");
+const { OpenAI, toFile } = require("openai");
 const { OPENAI_API_KEY, OPENAI_ASSISTANT_ID } = require("../../server/config");
 const fs = require("fs");
 
+const upload = multer();
 const router = express.Router();
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
@@ -33,33 +35,19 @@ router.use((req, res, next) => {
 });
 
 router.post("/message", async (req, res) => {
-  const controller = new AbortController();
-  const { signal } = controller;
+  const threadId = req.body.thread_id;
+  const runController = runControllers.get(threadId);
 
-  signal.addEventListener("abort", () => {
-    console.log("Request aborted");
-    // Perform any necessary cleanup here
-    runControllers.delete(req.body.thread_id);
-    if (!res.headersSent) {
-      res.status(503).send("Request aborted by the client");
-    }
-  });
+  if (runController) {
+    console.log(`Aborting active run for thread ${threadId}`);
+    runControllers.delete(threadId);
+  }
 
   try {
-    await openai.beta.threads.messages
-      .create(
-        req.body.thread_id,
-        {
-          role: "user",
-          content: req.body.prompt,
-        },
-        { signal }
-      )
-      .catch((error) => {
-        // Handle promise rejection
-        console.error("Failed to create message:", error);
-        throw error; // Rethrow to be caught by outer try-catch
-      });
+    await openai.beta.threads.messages.create(req.body.thread_id, {
+      role: "user",
+      content: req.body.prompt,
+    });
 
     res.header("Content-Type", "text/plain");
 
@@ -72,24 +60,31 @@ router.post("/message", async (req, res) => {
       }
     };
 
-    const run = openai.beta.threads.runs
-      .createAndStream(
-        req.body.thread_id,
-        {
-          assistant_id: OPENAI_ASSISTANT_ID,
-        },
-        { signal }
-      )
-      .on("textDelta", (textDelta, snapshot) => {
+    const stream = openai.beta.threads.runs
+      .createAndStream(req.body.thread_id, {
+        assistant_id: OPENAI_ASSISTANT_ID,
+      })
+      .on("runStepCreated", (step) => {
+        console.log(
+          `[${req.body.thread_id}] Created step ${step.id} for run ${step.run_id}`
+        );
+        runControllers.set(req.body.thread_id, { run: step.run_id });
+      })
+      .on("end", () => {
+        console.log(`[${req.body.thread_id}] Stream ended, deleting thread`);
+        runControllers.delete(req.body.thread_id);
+      })
+      .on("textDelta", (_, snapshot) => {
         if (!isResponseEnded) {
           res.write(snapshot.value);
         }
       })
       .on("textDone", () => {
+        console.log(`[${req.body.thread_id}] Finished text stream`);
         endResponse();
-        runControllers.delete(req.body.thread_id);
       })
       .on("error", (error) => {
+        runControllers.delete(req.body.thread_id);
         console.error("Stream error:", error);
         if (!isResponseEnded) {
           if (!res.headersSent) {
@@ -99,47 +94,31 @@ router.post("/message", async (req, res) => {
         }
       });
 
-    runControllers.set(req.body.thread_id, { run, controller });
-
     req.on("close", () => {
-      controller.abort();
+      runControllers.delete(req.body.thread_id);
     });
   } catch (error) {
     console.error("Error handling the request:", error);
     if (!res.headersSent) {
-      res
-        .status(
-          error.name === "AbortError" || error.name === "APIUserAbortError"
-            ? 503
-            : 500
-        )
-        .send("Request error");
+      res.status(500).send("Request error");
     }
-  }
-});
-
-// Global handler for unhandled promise rejections, specifically handling APIUserAbortError
-process.on("unhandledRejection", (reason, promise) => {
-  if (reason.name === "APIUserAbortError") {
-    console.error(
-      "APIUserAbortError detected. Promise:",
-      promise,
-      "Reason:",
-      reason.message
-    );
-    // Handle APIUserAbortError specifically, e.g., logging or cleanup tasks
-  } else {
-    console.error("Unhandled Rejection at:", promise, "reason:", reason);
-    // General handling for other types of unhandled rejections
   }
 });
 
 router.post("/stop", async (req, res) => {
   const runController = runControllers.get(req.body.thread_id);
+  console.log(
+    `[${req.body.thread_id}] Requesting run ${runController.run} stop`
+  );
   if (runController) {
-    runController.controller.abort(); // Access the `controller` property and call `abort`
-    runControllers.delete(req.body.thread_id);
-    res.json({ message: "Stream aborted successfully" });
+    const run = await openai.beta.threads.runs.cancel(
+      req.body.thread_id,
+      runController.run
+    );
+    console.log(
+      `[${req.body.thread_id}] Run ${runController.run} stop requested`
+    );
+    res.json(run);
   } else {
     res.status(404).send("Stream not found or already ended.");
   }
