@@ -13,8 +13,10 @@ class ChatApp {
     this.chatManager = new ChatManager(assistant.id, thread.id);
     this.messagesManager = new MessagesManager();
     this.inputManager = new InputManager({
-      onStart: (message) => this.sendMessage(message),
+      onStart: (message, files = []) => this.sendMessage(message, files),
       onStop: () => this.stop(),
+      onFileUpload: (id, file) => this.uploadFile(id, file),
+      onFileRemove: (openaiId) => this.chatManager.removeFile(openaiId),
     });
 
     // Imposta gli ascoltatori di eventi
@@ -33,7 +35,7 @@ class ChatApp {
    * @param {string} message - Il messaggio ricevuto.
    */
   handleStreamMessage(message) {
-    console.log("Received message:", message);
+    //console.log("Received message:", message);
     this.messagesManager.updateCurrentMessage(message);
   }
 
@@ -41,18 +43,17 @@ class ChatApp {
    * Gestisce il completamento dello stream.
    */
   handleStreamFinished() {
-    this.inputManager.isStreaming = false;
-    this.inputManager.updateSubmitButtonIcon();
+    this.inputManager._state.isStreaming = false;
   }
 
   /**
    * Invia un messaggio.
    * @param {string} message - Il messaggio da inviare.
    */
-  sendMessage(message) {
+  sendMessage(message, files = []) {
     this.messagesManager.appendMessage(message, "You");
     this.messagesManager.appendMessage("", this.assistant.name);
-    this.chatManager.sendMessage(message);
+    this.chatManager.sendMessage(message, files);
   }
 
   /**
@@ -60,5 +61,27 @@ class ChatApp {
    */
   stop() {
     this.chatManager.stop();
+  }
+
+  /**
+   * Carica un file.
+   * @param {string} id - L'ID del file.
+   * @param {File} file - Il file da caricare.
+   */
+  async uploadFile(id, file) {
+    this.inputManager.startUpload(id);
+
+    try {
+      const result = await this.chatManager.uploadFile(file);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      this.inputManager.finishUpload(id, result.id);
+    } catch (error) {
+      console.error("Failed to upload file:", error);
+      this.inputManager.failUpload(id, null, error.message);
+    }
   }
 }

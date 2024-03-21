@@ -11,6 +11,18 @@ class ChatManager {
     this.events = new Map();
     this.assistantId = assistantId;
     this.threadId = threadId;
+    this.sse = new EventSource(`/chat/stream?thread_id=${threadId}`);
+    this.sse.addEventListener("textDelta", (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        this.emit("streamMessage", data.value);
+      } catch (error) {
+        console.error("Failed to parse stream message", error);
+      }
+    });
+    this.sse.addEventListener("end", () => {
+      this.emit("streamFinished");
+    });
   }
 
   /**
@@ -42,8 +54,10 @@ class ChatManager {
   /**
    * Invia un messaggio al server e gestisce la risposta.
    * @param {string} prompt - Il messaggio da inviare.
+   * @param {string[]} fileIds - Gli ID dei file da inviare.
    */
-  async sendMessage(prompt) {
+  async sendMessage(prompt, fileIds) {
+    console.log("Sending message:", { prompt, fileIds });
     const response = await fetch("/chat/message", {
       method: "POST",
       headers: {
@@ -52,23 +66,15 @@ class ChatManager {
       body: JSON.stringify({
         prompt,
         thread_id: this.threadId,
+        file_ids: fileIds || [],
       }),
     });
 
-    if (response.body) {
-      const reader = response.body
-        .pipeThrough(new TextDecoderStream())
-        .getReader();
-      let done, value;
-      while (true) {
-        ({ done, value } = await reader.read());
-        if (done) {
-          this.emit("streamFinished");
-          break;
-        }
-        this.emit("streamMessage", value);
-      }
+    if (!response.ok) {
+      throw new Error("Failed to send message");
     }
+
+    return await response.text();
   }
 
   /**
@@ -85,10 +91,52 @@ class ChatManager {
       }),
     });
 
-    if (response.ok) {
-      this.emit("streamStopped");
+    if (!response.ok) {
+      throw new Error("Failed to stop stream");
     }
 
-    return response.ok;
+    return await response.json();
+  }
+
+  /**
+   * Carica un file e restituisce l'oggetto File caricato.
+   * @param {File} file - Il file da caricare.
+   * @returns {Promise<File>} - Il file caricato.
+   */
+  async uploadFile(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch("/chat/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error("Failed to upload file");
+    }
+  }
+
+  /**
+   * Elimina un file caricato.
+   * @param {string} openaiId - L'ID OpenAI del file da eliminare.
+   */
+  async removeFile(openaiId) {
+    const response = await fetch("/chat/remove", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        openai_id: openaiId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to remove file");
+    }
+
+    return await response.json();
   }
 }

@@ -1,95 +1,100 @@
-/**
- * Gestisce la logica per la visualizzazione e l'aggiornamento dei messaggi nella chat.
- */
 class MessagesManager {
-  /**
-   * Costruttore della classe MessagesManager.
-   */
   constructor() {
+    this._state = new ReactiveCore(
+      {
+        messages: [],
+        userScrolled: false,
+        isFirstMessage: true,
+      },
+      () => this.renderMessages()
+    );
     this.messageTemplate = document.getElementById("baseMessage");
     this.messagesContainer = document.getElementById("messagesContainer");
     this.messagesOverflow = document.getElementById("messagesOverflow");
-    this.userScrolled = false;
-    this.isFirstMessage = true;
     this.lastUpdate = 0;
-    this.initializeScrollListener();
+
+    if (this.messagesOverflow) {
+      this.initializeScrollListener();
+    }
   }
 
-  /**
-   * Inizializza il listener per l'evento di scroll.
-   */
   initializeScrollListener() {
     this.messagesOverflow.addEventListener("scroll", () => {
       const { scrollTop, scrollHeight, clientHeight } = this.messagesOverflow;
-      this.userScrolled = scrollTop < scrollHeight - clientHeight - 10;
+      this._state.userScrolled = scrollTop < scrollHeight - clientHeight - 10;
     });
   }
 
-  /**
-   * Aggiunge un messaggio al contenitore dei messaggi.
-   * @param {string} message - Il messaggio da aggiungere.
-   * @param {string} role - Il ruolo dell'utente che ha inviato il messaggio.
-   */
   appendMessage(message, role) {
-    if (this.isFirstMessage) {
-      this.messagesContainer.innerHTML = "";
-      this.isFirstMessage = false;
-    }
+    const newMessage = { content: message, role };
+    this._state.messages.push(newMessage);
 
-    const newMessage = this.messageTemplate.cloneNode(true);
-    const messageContent = newMessage.querySelector(".messageContent");
-    const messageRole = newMessage.querySelector(".messageRole");
-
-    messageContent.textContent = message;
-    messageRole.textContent = role;
-    newMessage.style.display = "flex";
-
-    this.messagesContainer.appendChild(newMessage);
-
-    if (!this.userScrolled) {
+    if (!this._state.userScrolled) {
       this.scrollToBottom();
     }
-
-    this.userScrolled = false;
+    this._state.userScrolled = false;
   }
 
-  /**
-   * Scorre fino all'ultimo messaggio.
-   */
   scrollToBottom() {
-    this.messagesOverflow.scrollTop = this.messagesOverflow.scrollHeight;
+    requestAnimationFrame(() => {
+      if (this.messagesOverflow) {
+        this.messagesOverflow.scrollTop = this.messagesOverflow.scrollHeight;
+      }
+    });
   }
 
-  /**
-   * Aggiorna il contenuto dell'ultimo messaggio.
-   * @param {string} content - Il nuovo contenuto del messaggio.
-   */
   updateCurrentMessage(content) {
     if (!this.lastUpdate || performance.now() - this.lastUpdate > 25) {
       this.lastUpdate = performance.now();
-      requestAnimationFrame(() => this.performUpdate(content));
+      const lastMessageIndex = this._state.messages.length - 1;
+      if (lastMessageIndex >= 0) {
+        this._state.messages[lastMessageIndex].content = content;
+      }
     }
   }
 
-  /**
-   * Esegue l'aggiornamento del contenuto dell'ultimo messaggio.
-   * @param {string} content - Il contenuto del messaggio.
-   */
-  performUpdate(content) {
-    const lastMessage = this.messagesContainer.lastElementChild;
-    if (!lastMessage) return;
+  renderMessages() {
+    // Use a document fragment as a double buffer.
+    const fragment = new DocumentFragment();
 
-    const messageContent = lastMessage.querySelector(".messageContent");
-    if (!messageContent) return;
-
-    const sanitizedContent = DOMPurify.sanitize(content);
-    const parsedContent = marked.parse(sanitizedContent);
-
-    if (messageContent.innerHTML !== parsedContent) {
-      messageContent.innerHTML = parsedContent;
-      if (!this.userScrolled) {
-        this.scrollToBottom();
+    // Clear messages if it's the first message to avoid flickering.
+    if (this._state.isFirstMessage) {
+      while (this.messagesContainer.firstChild) {
+        this.messagesContainer.removeChild(this.messagesContainer.firstChild);
       }
+      this._state.isFirstMessage = false;
+    }
+
+    this._state.messages.forEach(({ content, role }) => {
+      if (!this.messageTemplate) {
+        console.error("Base message element not found.");
+        return;
+      }
+      // Clone the base message element.
+      const newMessage = this.messageTemplate.cloneNode(true);
+      const messageContent = newMessage.querySelector(".messageContent");
+      const messageRole = newMessage.querySelector(".messageRole");
+      const messageAvatar = newMessage.querySelector(".messageAvatar");
+
+      if (messageContent && messageRole) {
+        const escapedContent = content
+          .replace(/\"/g, '"')
+          .replace(/\/\n/, "\n");
+        const sanitizedContent = DOMPurify.sanitize(escapedContent);
+        const parsedContent = marked.parse(sanitizedContent);
+        messageContent.innerHTML = parsedContent;
+        messageRole.textContent = role;
+        messageAvatar.src = `https://gravatar.com/avatar/${role}?s=100&d=retro&r=x`;
+        newMessage.classList.remove("hidden");
+        fragment.appendChild(newMessage);
+      }
+    });
+
+    // Replace the messages container content with the fragment in one operation.
+    this.messagesContainer.replaceChildren(fragment);
+
+    if (!this._state.userScrolled) {
+      this.scrollToBottom();
     }
   }
 }
