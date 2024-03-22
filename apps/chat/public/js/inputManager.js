@@ -1,10 +1,17 @@
+/**
+ * Gestisce l'input dell'utente nella chat.
+ */
 class InputManager {
+  /**
+   * Costruisce un'istanza di InputManager.
+   * @param {Object} callbacks - Callback per gestire gli eventi dell'input.
+   */
   constructor(
     callbacks = {
-      onStart: () => {},
-      onStop: () => {},
-      onFileUpload: () => {},
-      onFileRemove: () => {},
+      onStart: () => {}, // Callback chiamato all'avvio dell'input
+      onStop: () => {}, // Callback chiamato alla chiusura dell'input
+      onFileUpload: () => {}, // Callback chiamato all'upload di un file
+      onFileRemove: () => {}, // Callback chiamato alla rimozione di un file
     }
   ) {
     this._state = new ReactiveCore(
@@ -23,6 +30,9 @@ class InputManager {
     this.updateUI();
   }
 
+  /**
+   * Imposta gli elementi del DOM utilizzati dall'InputManager.
+   */
   setupElements() {
     this.inputForm = document.getElementById("inputForm");
     this.textarea = document.getElementById("message");
@@ -32,28 +42,41 @@ class InputManager {
     this.attachmentsPreview = document.getElementById("attachmentPreviews");
   }
 
+  /**
+   * Aggiunge gli event listeners agli elementi del DOM.
+   */
   attachEventListeners() {
-    this.inputForm.addEventListener("submit", (e) => this.handleFormSubmit(e));
-    this.inputForm.addEventListener("input", (e) => this.handleFormChange(e));
-    this.textarea.addEventListener("focus", () => this.handleTextareaFocus());
-    this.textarea.addEventListener("blur", () => this.handleTextareaBlur());
+    this.inputForm.addEventListener("submit", (e) => this.handleFormSubmit(e)); // Listener per la sottomissione del form
+    this.inputForm.addEventListener("input", (e) => this.handleFormChange(e)); // Listener per il cambiamento dell'input
+    this.textarea.addEventListener("focus", () => this.handleTextareaFocus()); // Listener per il focus sul textarea
+    this.textarea.addEventListener("blur", () => this.handleTextareaBlur()); // Listener per il blur sul textarea
     this.textarea.addEventListener("keydown", (e) =>
       this.handleTextareaKeyDown(e)
-    );
-    this.fileButton.addEventListener("click", () => this.fileInput.click());
+    ); // Listener per la pressione di un tasto nel textarea
+    this.fileButton.addEventListener("click", () => this.fileInput.click()); // Listener per il click sul pulsante di upload file
     this.fileInput.addEventListener("change", (e) =>
       this.handleFileSelection(e)
-    );
+    ); // Listener per la selezione di un file
   }
 
+  /**
+   * Gestisce l'evento di focus sul textarea.
+   */
   handleTextareaFocus() {
     this._state.focused = true;
   }
 
+  /**
+   * Gestisce l'evento di blur sul textarea.
+   */
   handleTextareaBlur() {
     this._state.focused = false;
   }
 
+  /**
+   * Gestisce l'evento di pressione di un tasto nel textarea.
+   * @param {Event} e - L'evento di pressione del tasto.
+   */
   handleTextareaKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -61,6 +84,10 @@ class InputManager {
     }
   }
 
+  /**
+   * Gestisce l'invio del form.
+   * @param {Event} e - L'evento di invio del form.
+   */
   handleFormSubmit(e) {
     e.preventDefault();
     const message = this.inputForm.message.value.trim();
@@ -78,14 +105,22 @@ class InputManager {
     }
   }
 
+  /**
+   * Gestisce il cambiamento nel textarea.
+   * @param {Event} e - L'evento di cambiamento nel textarea.
+   */
   handleFormChange(e) {
     this._state.message = e.target.value;
   }
 
+  /**
+   * Gestisce la selezione di un file.
+   * @param {Event} e - L'evento di selezione del file.
+   */
   handleFileSelection(e) {
     const maxSize = 50 * 1024 * 1024; // 50MB in bytes
-    const files = Array.from(e.target.files); // Get all selected files
-    if (files.length === 0) return; // Exit if no files are selected
+    const files = Array.from(e.target.files); // Ottiene tutti i file selezionati
+    if (files.length === 0) return; // Esce se non sono stati selezionati file
 
     files.forEach((file) => {
       if (this._state.files.length >= 10) {
@@ -112,11 +147,15 @@ class InputManager {
         file,
       };
 
-      this.callbacks.onFileUpload(id, file); // Adjusted to send a single file in an array
+      this.callbacks.onFileUpload(id, file); // Aggiustato per inviare un singolo file in un array
       this._state.files = [...this._state.files, fileStateObject];
     });
   }
 
+  /**
+   * Gestisce la rimozione di un file.
+   * @param {string} id - L'ID del file da rimuovere.
+   */
   handleFileRemoval(id) {
     const { openaiId } = this._state.files.find((f) => f.id === id);
 
@@ -124,7 +163,7 @@ class InputManager {
       alert("You cannot remove a file that is being uploaded.");
       return;
     }
-    //remove the file from the file input element
+    // Rimuove il file dall'elemento di input file
 
     this.callbacks.onFileRemove(openaiId);
     this._state.files = this._state.files.filter((f) => f.id !== id);
@@ -134,6 +173,9 @@ class InputManager {
       .map((f) => f.file);
   }
 
+  /**
+   * Aggiorna l'interfaccia utente.
+   */
   updateUI() {
     this.updateSubmitButtonState();
     this.updateSubmitButtonIcon();
@@ -141,6 +183,9 @@ class InputManager {
     this.updateAttachmentsPreview();
   }
 
+  /**
+   * Aggiorna lo stato del pulsante di invio.
+   */
   updateSubmitButtonState() {
     const submitButton = this.inputForm.querySelector("button[type='submit']");
     submitButton.disabled = !(
@@ -150,6 +195,9 @@ class InputManager {
     );
   }
 
+  /**
+   * Aggiorna l'icona del pulsante di invio.
+   */
   updateSubmitButtonIcon() {
     const submitButton = this.inputForm.querySelector("button[type='submit']");
     submitButton.innerHTML = this._state.isStreaming
@@ -158,6 +206,9 @@ class InputManager {
     feather.replace();
   }
 
+  /**
+   * Aggiorna il textarea in base al numero di righe.
+   */
   updateTextarea() {
     const textRows = this._state.message.split("\n").length;
     const maxRows = 10;
@@ -165,6 +216,9 @@ class InputManager {
     this.textarea.rows = textRows > maxRows ? maxRows : textRows;
   }
 
+  /**
+   * Rimuove gli event listeners dagli elementi di anteprima degli allegati.
+   */
   removeAttachmentEventListeners() {
     Array.from(this.attachmentsPreview.childNodes).forEach((attachment) => {
       if (attachment.nodeName !== "DIV") return;
@@ -175,25 +229,28 @@ class InputManager {
     });
   }
 
+  /**
+   * Aggiorna l'anteprima degli allegati.
+   */
   updateAttachmentsPreview() {
-    // Remove existing event listeners
+    // Rimuove gli event listeners esistenti
     this.removeAttachmentEventListeners();
 
-    // If there are files, show the preview container
+    // Se ci sono file, mostra il container di anteprima
     this.attachmentsPreview.classList.toggle(
       "hidden",
       this._state.files.length === 0
     );
 
-    // Use a document fragment as a double buffer.
+    // Usa un frammento di documento come doppio buffer.
     const fragment = new DocumentFragment();
 
-    // Clear the previews container
+    // Svuota il container delle anteprime
     while (this.attachmentsPreview.firstChild) {
       this.attachmentsPreview.removeChild(this.attachmentsPreview.firstChild);
     }
 
-    // Render the previews
+    // Renderizza le anteprime
     this._state.files.forEach((file) => {
       const attachment = this.attachmentTemplate.cloneNode(true);
       const attachmentLoader = attachment.querySelector("#attachmentLoader");
@@ -212,7 +269,7 @@ class InputManager {
         this.handleFileRemoval(file.id);
       });
 
-      // Show the attachment remove button on hover
+      // Mostra il pulsante di rimozione dell'allegato al passaggio del mouse
       attachment.addEventListener("mouseenter", () => {
         attachmentRemove.classList.remove("hidden");
       });
@@ -227,12 +284,22 @@ class InputManager {
     this.attachmentsPreview.appendChild(fragment);
   }
 
+  /**
+   * Avvia l'upload di un file.
+   * @param {string} id - L'ID del file da caricare.
+   */
   startUpload(id) {
     this._state.files = this._state.files.map((f) =>
       f.id === id ? { ...f, loading: true } : f
     );
   }
 
+  /**
+   * Conclude l'upload di un file.
+   * @param {string} id - L'ID del file.
+   * @param {string} openaiId - L'ID del file su OpenAI.
+   * @param {string} error - Eventuali errori durante l'upload.
+   */
   finishUpload(id, openaiId = null, error = null) {
     this._state.files = this._state.files.map((f) =>
       f.id === id ? { ...f, openaiId, loading: false, error } : f

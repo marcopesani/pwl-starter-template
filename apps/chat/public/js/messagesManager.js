@@ -1,4 +1,10 @@
+/**
+ * Gestisce la gestione dei messaggi nella chat.
+ */
 class MessagesManager {
+  /**
+   * Costruisce un'istanza di MessagesManager.
+   */
   constructor() {
     this._state = new ReactiveCore(
       {
@@ -18,6 +24,9 @@ class MessagesManager {
     }
   }
 
+  /**
+   * Inizializza un listener per lo scroll.
+   */
   initializeScrollListener() {
     this.messagesOverflow.addEventListener("scroll", () => {
       const { scrollTop, scrollHeight, clientHeight } = this.messagesOverflow;
@@ -25,6 +34,11 @@ class MessagesManager {
     });
   }
 
+  /**
+   * Aggiunge un messaggio alla lista dei messaggi.
+   * @param {string} message - Il messaggio da aggiungere.
+   * @param {string} role - Il ruolo associato al messaggio.
+   */
   appendMessage(message, role) {
     const newMessage = { content: message, role };
     this._state.messages.push(newMessage);
@@ -35,6 +49,9 @@ class MessagesManager {
     this._state.userScrolled = false;
   }
 
+  /**
+   * Scorre fino in fondo alla lista dei messaggi.
+   */
   scrollToBottom() {
     requestAnimationFrame(() => {
       if (this.messagesOverflow) {
@@ -43,6 +60,10 @@ class MessagesManager {
     });
   }
 
+  /**
+   * Aggiorna il messaggio corrente.
+   * @param {string} content - Il contenuto del messaggio da aggiornare.
+   */
   updateCurrentMessage(content) {
     if (!this.lastUpdate || performance.now() - this.lastUpdate > 25) {
       this.lastUpdate = performance.now();
@@ -53,11 +74,14 @@ class MessagesManager {
     }
   }
 
+  /**
+   * Renderizza i messaggi nella chat.
+   */
   renderMessages() {
-    // Use a document fragment as a double buffer.
+    // Utilizza un frammento di documento come doppio buffer.
     const fragment = new DocumentFragment();
 
-    // Clear messages if it's the first message to avoid flickering.
+    // Cancella i messaggi se è il primo messaggio per evitare sfarfallio.
     if (this._state.isFirstMessage) {
       while (this.messagesContainer.firstChild) {
         this.messagesContainer.removeChild(this.messagesContainer.firstChild);
@@ -67,10 +91,10 @@ class MessagesManager {
 
     this._state.messages.forEach(({ content, role }) => {
       if (!this.messageTemplate) {
-        console.error("Base message element not found.");
+        console.error("Elemento del messaggio base non trovato.");
         return;
       }
-      // Clone the base message element.
+      // Clona l'elemento del messaggio base.
       const newMessage = this.messageTemplate.cloneNode(true);
       const messageContent = newMessage.querySelector(".messageContent");
       const messageRole = newMessage.querySelector(".messageRole");
@@ -90,7 +114,7 @@ class MessagesManager {
       }
     });
 
-    // Replace the messages container content with the fragment in one operation.
+    // Sostituisci il contenuto del contenitore dei messaggi con il frammento in un'unica operazione.
     this.messagesContainer.replaceChildren(fragment);
 
     if (!this._state.userScrolled) {
