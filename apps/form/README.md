@@ -12,15 +12,15 @@ L'applicazione è composta da tre parti principali:
 
 ### Modifica del Form nel Frontend (`index.html`)
 
-Per modificare il form, dovrai aggiungere o rimuovere i campi input nel file `index.html`. Ad esempio, se vuoi aggiungere un campo per inserire il nome del destinatario dell'email:
+Per modificare il form, dovrai aggiungere o rimuovere i campi input nel file `index.html`. Ad esempio, se vuoi aggiungere un campo per specificare la lingua del messaggio
 
 1. Trova il tag `<form>` con l'id `contentForm`.
 2. Aggiungi il seguente codice HTML per creare un nuovo campo di input:
 
 ```html
 <div>
-  <label for="recipientName" class="block text-sm font-medium text-gray-700">Nome Destinatario</label>
-  <input type="text" id="recipientName" name="recipientName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400" placeholder="Inserisci il nome del destinatario">
+  <label for="language" class="block text-sm font-medium text-gray-700">Lingua</label>
+  <input type="text" id="language" name="language" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400" placeholder="Inserisci la lingua da utilizzare">
 </div>
 ```
 
@@ -33,7 +33,7 @@ Dopo aver modificato il form, devi aggiornare il backend per gestire i nuovi dat
 3. Aggiungi il codice per leggere il nuovo campo dal `req.body`. Ad esempio:
 
 ```javascript
-const userPrompt = ... Nome del destinatario: ${recipientName}. ...;
+const userPrompt = ... Lingua: ${language}. ...;
 ```
 
 ### Aggiornamento del Frontend per Mostrare i Nuovi Dati (`index.js`)

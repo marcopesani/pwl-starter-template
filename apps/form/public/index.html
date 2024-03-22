@@ -141,15 +141,20 @@
           <div class="max-w-lg mx-auto">
             <div class="bg-white shadow rounded">
               <div class="p-6">
+                <!-- Titolo -->
                 <h2
                   id="title"
                   class="text-3xl font-bold text-gray-900 text-center"
                 >
                   Exciting News!
                 </h2>
+
+                <!-- Sottotitolo -->
                 <p id="subtitle" class="mt-1 text-xl text-gray-700 text-center">
                   We're thrilled to share something special with you.
                 </p>
+
+                <!-- Bottone -->
                 <div class="text-center">
                   <a
                     href="#"
@@ -158,15 +163,44 @@
                     >Learn More</a
                   >
                 </div>
-                <div class="my-4">
-                  <!-- Placeholder for hero image -->
+
+                <!-- Immagine con indicatore di caricamento -->
+                <div class="my-4 relative">
+                  <div
+                    class="absolute flex justify-center items-center inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded animate-pulse"
+                  >
+                    <svg
+                      class="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-100"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </div>
                   <img
                     id="hero"
                     src="https://via.placeholder.com/600x300"
+                    height="300"
+                    width="600"
                     alt="Hero"
-                    class="w-full h-auto rounded"
+                    class="w-full h-auto rounded relative"
                   />
                 </div>
+
+                <!-- Testo -->
                 <p id="body" class="text-gray-700">
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
                   non risus. Suspendisse lectus tortor, dignissim sit amet,
@@ -174,6 +208,8 @@
                   diam. Maecenas ligula massa, varius a, semper congue, euismod
                   non, mi.
                 </p>
+
+                <!-- Bottone -->
                 <div class="text-center">
                   <a
                     href="#"

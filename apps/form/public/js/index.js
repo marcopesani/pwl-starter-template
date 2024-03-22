@@ -71,7 +71,9 @@ document.addEventListener("DOMContentLoaded", function () {
     cta1.textContent = content.cta;
     cta2.textContent = content.cta;
     body.textContent = content.body;
-    hero.src = content.imageUrl;
+    hero.src = `/form/generate-image?prompt=${encodeURIComponent(
+      content.imagePrompt
+    )}`;
   };
 
   // Gestisce il cambiamento del form, abilitando o disabilitando il pulsante di invio
