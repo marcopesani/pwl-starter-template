@@ -3,6 +3,7 @@ const router = express.Router();
 const path = require("path");
 const multer = require("multer");
 const upload = multer();
+const axios = require("axios");
 const { generateEmailContent, generateHeroImage } = require("./openai");
 
 // Rende accessibili i file statici dalla directory 'public'
@@ -43,10 +44,10 @@ router.get("/generate-image", async (req, res) => {
     const imageUrl = await generateHeroImage(prompt);
 
     // Scarica l'immagine PNG e restituiscila come risposta
-    const response = await fetch(imageUrl);
-    const buffer = await response.arrayBuffer();
+    const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
+    const buffer = Buffer.from(response.data, "binary");
     res.set("Content-Type", "image/png");
-    res.send(Buffer.from(buffer));
+    res.send(buffer);
   } catch (error) {
     console.error("Error generating image:", error);
     if (error.message === "prompt_missing") {
