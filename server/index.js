@@ -18,9 +18,11 @@ app.use(express.static("public"));
 // Import routes
 const formRoute = require("../apps/form");
 const chatRoute = require("../apps/chat");
+const codeRoute = require("../apps/code");
 
 // Use routes
 app.use("/form", formRoute);
+app.use("/code", codeRoute);
 app.use("/chat", chatRoute);
 
 // Start the server on the specified port

@@ -13,7 +13,7 @@
     ></script>
   </head>
   <body class="bg-slate-100 flex justify-center items-center min-h-screen">
-    <main class="container mx-auto max-w-xl px-4">
+    <main class="container mx-auto max-w-3xl px-4">
       <header class="flex flex-col gap-2 justify-center items-center mb-10">
         <img
           src="/images/cropped-PugliaWomenLead_LOGO-BALCK.png"
@@ -22,7 +22,7 @@
         />
         <h1 class="text-2xl font-semibold">Puglia Women AI</h1>
       </header>
-      <section class="gap-4 md:columns-2 mx-auto">
+      <section class="gap-4 md:columns-3 mx-auto">
         <a
           class="block p-6 bg-slate-200 hover:bg-slate-300 rounded flex flex-col mb-4 md:mb-0"
           href="/chat"
@@ -34,7 +34,7 @@
           <p>Chatta con il tuo assistente personalizzato.</p>
         </a>
         <a
-          class="block p-6 bg-slate-200 hover:bg-slate-300 rounded flex flex-col"
+          class="block p-6 bg-slate-200 hover:bg-slate-300 rounded flex flex-col mb-4 md:mb-0"
           href="/form"
         >
           <div class="flex justify-between items-center mb-2">
@@ -42,6 +42,16 @@
             <i data-feather="arrow-right"></i>
           </div>
           <p>Genera contenuti basati su una struttura dati definita.</p>
+        </a>
+        <a
+          class="block p-6 bg-slate-200 hover:bg-slate-300 rounded flex flex-col"
+          href="/code"
+        >
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="text-xl font-semibold">Code</h2>
+            <i data-feather="arrow-right"></i>
+          </div>
+          <p>Genera una pagina HTML a partire da una descrizione.</p>
         </a>
       </section>
     </main>
