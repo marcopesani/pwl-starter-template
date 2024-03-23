@@ -49,8 +49,6 @@ async function generateEmailContent(brief) {
     throw new Error("errore_generazione_email");
   }
 
-  console.log(chatCompletion.choices[0].message.content);
-
   // Restituire i contenuti dell'email come un oggetto JSON
   return JSON.parse(chatCompletion.choices[0].message.content);
 }
