@@ -94,6 +94,7 @@ router.post("/message", async (req, res) => {
     };
 
     const session = sessions.get(threadId);
+    let messageStreamContent = "";
 
     openai.beta.threads.runs
       .createAndStream(req.body.thread_id, {
@@ -111,8 +112,9 @@ router.post("/message", async (req, res) => {
         console.log(`[${req.body.thread_id}] Stream ended, deleting thread`);
         runControllers.delete(req.body.thread_id);
       })
-      .on("textDelta", (delta, snapshot) => {
-        session.push({ value: snapshot.value }, "textDelta");
+      .on("textDelta", (delta) => {
+        messageStreamContent += delta.value;
+        session.push({ value: messageStreamContent }, "textDelta");
         res.write(delta.value);
       })
       .on("textDone", () => {
